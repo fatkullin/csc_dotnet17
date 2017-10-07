@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
+using MyNUnitAttributes;
 
 namespace MyNUnit
 {
@@ -14,6 +16,28 @@ namespace MyNUnit
             }
 
             var path = args[0];
+            var dlls = Directory.EnumerateFiles(path, "*.dll");
+
+            foreach (var dllPath in dlls)
+            {
+                RunTestsFromAssembly(dllPath);
+            }
+            
+            Console.WriteLine("Completed. Press any key...");
+            Console.ReadKey();
+        }
+
+        private static void RunTestsFromAssembly(string path)
+        {
+            if (path.EndsWith("MyNUnitAttributes.dll"))
+            {
+                // explicitly loaded non-signed assembly of MyNUnitAttributes 
+                // leads to problems with 'switch' in TestClassLoader 
+                // (comparison of attribute types will break)
+                // sorry for this kludge
+                return;
+            }
+
             var assembly = Assembly.LoadFrom(path);
 
             var testMethodFilter = new OnlyStaticMethodsFilter();
@@ -24,9 +48,6 @@ namespace MyNUnit
             {
                 PrintTestClassResults(TestClassRunner.Run(testClass));
             }
-
-            Console.WriteLine("Completed. Press any key...");
-            Console.ReadKey();
         }
 
         private static void PrintTestClassResults(TestClassRunResult result)
