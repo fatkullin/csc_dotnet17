@@ -2,7 +2,6 @@
 
 namespace MyNUnitAttributes
 {
-
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class TestAttribute : Attribute
     {
@@ -35,7 +34,7 @@ namespace MyNUnitAttributes
             ExceptionType = exceptionType;
         }
 
-        public Type ExceptionType { get; private set; }
+        public Type ExceptionType { get; }
     }
 
     public sealed class IgnoreAttribute : Attribute
@@ -45,6 +44,6 @@ namespace MyNUnitAttributes
             Reason = reason;
         }
 
-        public string Reason { get; private set; }
+        public string Reason { get; }
     }
 }

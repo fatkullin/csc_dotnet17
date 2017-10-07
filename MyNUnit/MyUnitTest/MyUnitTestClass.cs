@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using MyNUnitAttributes;
+// ReSharper disable UnusedMember.Global
 
 namespace MyUnitTest
 {
-    internal class MyUnitTest
+    internal class MyUnitTestClass
     {
         [BeforeClass]
         public static void BeforeClass1()
@@ -21,13 +18,9 @@ namespace MyUnitTest
         }
 
         [AfterClass]
-        public static void AfterClassX()
+        public static void AfterClassPrintMessage()
         {
-        }
-
-        [AfterClass]
-        public static void AfterClassY()
-        {
+            Console.WriteLine("Ensure: ignored: 1; succeeded: 2; failed: 3");
         }
 
         [Before]
@@ -53,13 +46,14 @@ namespace MyUnitTest
         public static void ObsoleteMethod()
         {
             Console.WriteLine("Do something wrong");
-            double zero = 0;
-            double a = 5 / zero;
+            const double zero = 0;
+            const double a = 5 / zero;
+            Console.WriteLine(a);
         }
 
         [Test]
         [Expected(typeof(NullReferenceException))]
-        public static void NRXMethod()
+        public static void NrxMethod()
         {
             Console.WriteLine("Throw exception");
             throw new NullReferenceException("=)");
@@ -88,6 +82,5 @@ namespace MyUnitTest
             var rnd = new Random();
             Thread.Sleep(rnd.Next() % 1000);
         }
-
     }
 }
