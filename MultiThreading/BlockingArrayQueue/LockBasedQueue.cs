@@ -1,16 +1,15 @@
-﻿using System.Collections;
-using System.Threading;
+﻿using System.Threading;
 
 namespace BlockingArrayQueue
 {
-    public class LockBasedQueue : IQueue
+    public class LockBasedQueue<T> : IQueue<T>
     {
         public LockBasedQueue(uint maxItems = uint.MaxValue)
         {
             _maxItems = maxItems;
         }
 
-        public void Enqueue(object value)
+        public void Enqueue(T value)
         {
             lock (_locker)
             {
@@ -24,7 +23,7 @@ namespace BlockingArrayQueue
             }
         }
 
-        public object Dequeue()
+        public T Dequeue()
         {
             lock (_locker)
             {
@@ -39,14 +38,9 @@ namespace BlockingArrayQueue
             }
         }
 
-        public bool TryEnqueue(object value)
+        public bool TryEnqueue(T value)
         {
-            if (!Monitor.TryEnter(_locker))
-            {
-                return false;
-            }
-
-            try
+            lock (_locker)
             {
                 if (_queue.Count >= _maxItems)
                 {
@@ -56,34 +50,20 @@ namespace BlockingArrayQueue
                 Monitor.PulseAll(_locker);
                 return true;
             }
-            finally
-            {
-                Monitor.Exit(_locker);
-            }
         }
 
-        public bool TryDequeue(out object value)
+        public bool TryDequeue(out T value)
         {
-            if (!Monitor.TryEnter(_locker))
-            {
-                value = null;
-                return false;
-            }
-
-            try
+            lock (_locker)
             {
                 if (_queue.Count == 0)
                 {
-                    value = null;
+                    value = default(T);
                     return false;
                 }
                 value = _queue.Dequeue();
                 Monitor.PulseAll(_locker);
                 return true;
-            }
-            finally
-            {
-                Monitor.Exit(_locker);
             }
         }
 
@@ -99,6 +79,6 @@ namespace BlockingArrayQueue
         private readonly object _locker = new object();
 
         private readonly uint _maxItems;
-        private readonly Queue _queue = new Queue();
+        private readonly Queue<T> _queue = new Queue<T>();
     }
 }

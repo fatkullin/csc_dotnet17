@@ -2,96 +2,84 @@
 
 namespace BlockingArrayQueue
 {
-    internal class Node
-    {
-        public Node Next;
-        public object Value;
-    }
-
-    public class LockFreeQueue : IQueue
+    public class LockFreeQueue<T> : IQueue<T>
     {
         public LockFreeQueue(uint maxItems = uint.MaxValue)
         {
             _maxItems = maxItems;
         }
 
-        public void Enqueue(object value)
+        public void Enqueue(T value)
         {
             while (!TryEnqueue(value))
             {
             }
         }
 
-        public object Dequeue()
+        public T Dequeue()
         {
-            object result;
+            T result;
             while (!TryDequeue(out result))
             {
             }
             return result;
         }
 
-        public bool TryEnqueue(object value)
+        public bool TryEnqueue(T value)
         {
-            uint count = 0;
-            var prev = _head;
-            var current = prev.Next;
-
-            while (current != null && count < _maxItems)
+            bool enqueued;
+            do
             {
-                prev = current;
-                current = prev.Next;
-                count += 1;
-            }
+                uint count = 0;
+                var prev = _head;
+                var current = prev.Next;
 
-            if (count == _maxItems)
-            {
-                return false;
-            }
+                while (current != null && count < _maxItems)
+                {
+                    prev = current;
+                    current = prev.Next;
+                    count += 1;
+                }
 
-            var newNode = new Node { Value = value };
-            return Interlocked.CompareExchange(ref prev.Next, newNode, current) == current;
+                if (count == _maxItems)
+                {
+                    return false;
+                }
+
+                var newNode = new Node<T> {Value = value};
+                enqueued = Interlocked.CompareExchange(ref prev.Next, newNode, current) == current;
+            } while (!enqueued);
+            return true;
         }
 
-        public bool TryDequeue(out object value)
+        public bool TryDequeue(out T value)
         {
-            var curr = _head.Next;
-
-            if (curr == null)
+            bool dequeued;
+            Node<T> curr;
+            do
             {
-                value = null;
-                return false;
-            }
+                curr = _head.Next;
 
-            if (Interlocked.CompareExchange(ref _head.Next, curr.Next, curr) != curr)
-            {
-                value = null;
-                return false;
-            }
+                if (curr == null)
+                {
+                    value = default(T);
+                    return false;
+                }
+
+                dequeued = Interlocked.CompareExchange(ref _head.Next, curr.Next, curr) == curr;
+            } while (!dequeued);
 
             value = curr.Value;
+
             return true;
         }
 
         public void Clear()
         {
-            while (true)
-            {
-                var curr = _head.Next;
-
-                if (curr == null)
-                {
-                    return;
-                }
-
-                if (Interlocked.CompareExchange(ref _head.Next, null, curr) == curr)
-                {
-                    return;
-                }
-            }
+            _head.Next = null;
         }
 
         private readonly uint _maxItems;
-        private readonly Node _head = new Node();
+        private readonly Node<T> _head = new Node<T>();
     }
 }

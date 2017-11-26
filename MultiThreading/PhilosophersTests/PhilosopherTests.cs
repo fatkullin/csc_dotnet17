@@ -9,22 +9,31 @@ namespace PhilosophersTests
     public class PhilosopherTests
     {
         [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void ConstructPhilisopherWithTheSameForkTest()
+        {
+            var leftFork = new Fork(0);
+            var rightFork = new Fork(0);
+            // ReSharper disable once UnusedVariable
+            var philosopher = new Philosopher(leftFork, rightFork);
+        }
+
+        [TestMethod]
         public void PhilosopherTest()
         {
             const int count = 5;
             var philosofers = new Philosopher[count];
             var forks = new Fork[count];
-            var locker = new object();
             var thread = new Thread[count];
 
             for (var i = 0; i < count; i++)
             {
-                forks[i] = new Fork();
+                forks[i] = new Fork(i);
             }
 
             for (var i = 0; i < count; i++)
             {
-                philosofers[i] = new Philosopher(forks[i], forks[(i + 1) % count], locker);
+                philosofers[i] = new Philosopher(forks[i], forks[(i + 1) % count]);
             }
 
             for (var i = 0; i < count; i++)
@@ -42,6 +51,11 @@ namespace PhilosophersTests
             foreach (var th in thread)
             {
                 th.Join();
+            }
+
+            for (var i = 0; i < count; i++)
+            {
+                Assert.IsFalse(philosofers[i].Hungry);
             }
         }
     }

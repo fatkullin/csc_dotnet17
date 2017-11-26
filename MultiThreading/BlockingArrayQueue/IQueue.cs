@@ -1,11 +1,11 @@
 ﻿namespace BlockingArrayQueue
 {
-    public interface IQueue
+    public interface IQueue<T>
     {
-        void Enqueue(object value);
-        object Dequeue();
-        bool TryEnqueue(object value);
-        bool TryDequeue(out object value);
+        void Enqueue(T value);
+        T Dequeue();
+        bool TryEnqueue(T value);
+        bool TryDequeue(out T value);
         void Clear();
     }
 }
